@@ -16,12 +16,12 @@ public class Encryptor
     numRows = r;
     numCols = c;
   }
-  
+
   public String[][] getLetterBlock()
   {
     return letterBlock;
   }
-  
+
   /** Places a string into letterBlock in row-major order.
    *
    *   @param str  the string to be processed
@@ -32,6 +32,11 @@ public class Encryptor
    */
   public void fillBlock(String str)
   {
+    for (int row = 0; row < letterBlock.length; row++){
+      for (int col = 0; col < letterBlock[0].length; col++) {
+        letterBlock[row][col] = null;
+      }
+    }
     int x = 0;
     for (int rows = 0; rows < letterBlock.length; rows++)
     {
@@ -72,6 +77,7 @@ public class Encryptor
     }
 
     return result;
+
   }
 
   /** Encrypts a message.
@@ -82,31 +88,47 @@ public class Encryptor
    */
   public String encryptMessage(String message)
   {
-    int count = message.length();
-    String temp = "";
-    while (count > 0)
-    {
-      count = count - 15;
-      fillBlock(message);
-      temp += encryptBlock();
+    String result = "";
+
+    int letterBlockLength = letterBlock.length * (letterBlock[0].length);
+    int amountOfBlocks = (int) ((message.length() / ((double) letterBlockLength)) + 1);
+
+    for (int i = 0; i < amountOfBlocks; i++) {
+      String block = "";
+
+      if (i == 0) {
+        block = message.substring(0, i + letterBlockLength);
+      } else {
+        if (i != amountOfBlocks - 1) {
+          block = message.substring(i * letterBlockLength, ((i + 1) * letterBlockLength));
+        } else {
+          block = message.substring(i * letterBlockLength);
+        }
+      }
+
+      if (block.equals("")) break;
+
+      fillBlock(block);
+      result += encryptBlock();
     }
-    return temp;
+
+    return result;
   }
-  
+
   /**  Decrypts an encrypted message. All filler 'A's that may have been
    *   added during encryption will be removed, so this assumes that the
    *   original message (BEFORE it was encrypted) did NOT end in a capital A!
    *
    *   NOTE! When you are decrypting an encrypted message,
    *         be sure that you have initialized your Encryptor object
-   *         with the same row/column used to encrypted the message! (i.e. 
+   *         with the same row/column used to encrypted the message! (i.e.
    *         the “encryption key” that is necessary for successful decryption)
    *         This is outlined in the precondition below.
    *
    *   Precondition: the Encryptor object being used for decryption has been
    *                 initialized with the same number of rows and columns
-   *                 as was used for the Encryptor object used for encryption. 
-   *  
+   *                 as was used for the Encryptor object used for encryption.
+   *
    *   @param encryptedMessage  the encrypted message to decrypt
    *
    *   @return  the decrypted, original message (which had been encrypted)
@@ -115,8 +137,66 @@ public class Encryptor
    *        (e.g. a method to decrypt each section of the decrypted message,
    *         similar to how encryptBlock was used)
    */
-//  public String decryptMessage(String encryptedMessage)
-//  {
-//    /* to be implemented in part (d) */
-//  }
+  public String decryptMessage(String encryptedMessage)
+  {
+    String result = "";
+
+    int letterBlockLength = letterBlock.length * (letterBlock[0].length);
+    int amountOfBlocks = (int) ((encryptedMessage.length() / ((double) letterBlockLength)) + 1);
+
+    for (int i = 0; i < amountOfBlocks; i++) {
+      String block = "";
+
+      if (i == 0) {
+        block = encryptedMessage.substring(0, i + letterBlockLength);
+      } else {
+        if (i != amountOfBlocks - 1) {
+          block = encryptedMessage.substring(i * letterBlockLength, ((i + 1) * letterBlockLength));
+        } else {
+          block = encryptedMessage.substring(i * letterBlockLength);
+        }
+      }
+
+      if (block.equals("")) break;
+
+      fillBlockCol(block);
+
+      for (int row = 0; row < letterBlock.length; row++){
+        for (int col = 0; col < letterBlock[0].length; col++) {
+          result += letterBlock[row][col];
+        }
+      }
+
+    }
+
+    for (int i = result.length() - 1; i > -1; i--) {
+      if (result.charAt(i) != 'A') {
+        result = result.substring(0, i + 1);
+        return result;
+      }
+    }
+
+    return result;
+  }
+
+  public void fillBlockCol(String str)
+  {
+    for (int col = 0; col < letterBlock[0].length; col++){
+      for (int row = 0; row < letterBlock.length; row++) {
+        letterBlock[row][col] = null;
+      }
+    }
+
+    int x = 0;
+    for (int cols = 0; cols < letterBlock[0].length; cols++) {
+      for (int rows = 0; rows < letterBlock.length; rows++)
+      {
+        if (x != str.length())
+        {
+          letterBlock[rows][cols] = str.substring(x, x + 1);
+          x++;
+        }
+      }
+    }
+  }
 }
